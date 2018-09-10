@@ -50,7 +50,7 @@ RCT_EXPORT_METHOD(disable) {
     dispatch_async(dispatch_get_main_queue(), ^{
 
         [PPKController disable];
-        [self invokePluginResultWithMethodName:@"onDisabled" parms:nil];
+        [self invokePluginResultWithMethodName:@"onDisabled" params:nil];
     });
 }
 
@@ -64,7 +64,7 @@ RCT_EXPORT_METHOD(getMyPeerId)  {
             return;
         }
 
-        [self invokePluginResultWithMethodName:@"onGetMyPeerId" parms:@{@"myPeerId":[PPKController myPeerID]}];
+        [self invokePluginResultWithMethodName:@"onGetMyPeerId" params:@{@"myPeerId":[PPKController myPeerID]}];
     });
 }
 
@@ -167,7 +167,7 @@ RCT_EXPORT_METHOD(getDiscoveryPowerMode)  {
             return;
         }
 
-        [self invokePluginResultWithMethodName:@"onGetDiscoveryPowerMode" parms:@{@"discoveryPowerMode":@"NOT_AVAILABLE_ON_IOS"}];
+        [self invokePluginResultWithMethodName:@"onGetDiscoveryPowerMode" params:@{@"discoveryPowerMode":@"NOT_AVAILABLE_ON_IOS"}];
     });
 }
 
@@ -183,37 +183,37 @@ RCT_EXPORT_METHOD(setDiscoveryPowerMode:(NSString*)discoveryPowerMode)  {
 
 -(void)PPKControllerInitialized {
 
-    [self invokePluginResultWithMethodName:@"onEnabled" parms:nil];
+    [self invokePluginResultWithMethodName:@"onEnabled" params:nil];
 }
 
 -(void)PPKControllerFailedWithError:(PPKErrorCode)error {
 
-    [self invokePluginResultWithMethodName:@"onError" parms:@{@"platform":@"ios", @"errorCode":[NSNumber numberWithInt:error]}];
+    [self invokePluginResultWithMethodName:@"onError" params:@{@"platform":@"ios", @"errorCode":[NSNumber numberWithInt:error]}];
 }
 
 -(void)discoveryStateChanged:(PPKDiscoveryState)state {
 
-    [self invokePluginResultWithMethodName:@"onDiscoveryStateChanged" parms:@{@"platform":@"ios", @"state":[NSNumber numberWithInt:state]}];
+    [self invokePluginResultWithMethodName:@"onDiscoveryStateChanged" params:@{@"platform":@"ios", @"state":[NSNumber numberWithInt:state]}];
 }
 
 -(void)peerDiscovered:(PPKPeer *)peer {
 
-    [self invokePluginResultWithMethodName:@"onPeerDiscovered" parms:[self createDictionaryFromPeer:peer]];
+    [self invokePluginResultWithMethodName:@"onPeerDiscovered" params:[self createDictionaryFromPeer:peer]];
 }
 
 -(void)peerLost:(PPKPeer *)peer {
 
-    [self invokePluginResultWithMethodName:@"onPeerLost" parms:[self createDictionaryFromPeer:peer]];
+    [self invokePluginResultWithMethodName:@"onPeerLost" params:[self createDictionaryFromPeer:peer]];
 }
 
 -(void)discoveryInfoUpdatedForPeer:(PPKPeer *)peer {
 
-    [self invokePluginResultWithMethodName:@"onPeerUpdatedDiscoveryInfo" parms:[self createDictionaryFromPeer:peer]];
+    [self invokePluginResultWithMethodName:@"onPeerUpdatedDiscoveryInfo" params:[self createDictionaryFromPeer:peer]];
 }
 
 -(void)proximityStrengthChangedForPeer:(PPKPeer *)peer {
 
-    [self invokePluginResultWithMethodName:@"onProximityStrengthChanged" parms:[self createDictionaryFromPeer:peer]];
+    [self invokePluginResultWithMethodName:@"onProximityStrengthChanged" params:[self createDictionaryFromPeer:peer]];
 }
 
 #pragma mark - Helpers
@@ -224,15 +224,17 @@ RCT_EXPORT_METHOD(setDiscoveryPowerMode:(NSString*)discoveryPowerMode)  {
         return;
     }
 
-    [self invokePluginResultWithMethodName:@"onException" parms:@{@"platform":@"ios",@"message":errorString}];
+    [self invokePluginResultWithMethodName:@"onException" params:@{@"platform":@"ios",@"message":errorString}];
 }
 
--(void)invokePluginResultWithMethodName:(NSString*)name parms:(NSDictionary*)parms {
+-(void)invokePluginResultWithMethodName:(NSString*)name params:(NSDictionary*)params {
 
     dispatch_async(dispatch_get_main_queue(), ^{
 
         if (!hasListeners_) {
-            [PPKController disable];
+            if ([PPKController isEnabled]) {
+                [PPKController disable];
+            }
             return;
         }
 
@@ -240,11 +242,7 @@ RCT_EXPORT_METHOD(setDiscoveryPowerMode:(NSString*)discoveryPowerMode)  {
             return;
         }
 
-        NSMutableDictionary *statusMessage = [NSMutableDictionary new];
-        [statusMessage setObject:name forKey:@"methodName"];
-        if(parms) [statusMessage setObject:parms forKey:@"parms"];
-
-        [self sendEventWithName:@"callback" body:statusMessage];
+        [self sendEventWithName:name body:params];
     });
 }
 
@@ -270,8 +268,9 @@ RCT_EXPORT_METHOD(setDiscoveryPowerMode:(NSString*)discoveryPowerMode)  {
     [super stopObserving];
 }
 
-- (NSArray<NSString *> *)supportedEvents {
-    return @[@"callback"];
+- (NSArray<NSString *> *)supportedEvents
+{
+  return @[@"onEnabled", @"onException", @"onDisabled", @"onError", @"onDiscoveryStateChanged", @"onPeerDiscovered", @"onPeerLost", @"onProximityStrengthChanged", @"onGetMyPeerId", @"onGetDiscoveryPowerMode", @"onPeerUpdatedDiscoveryInfo"];
 }
 
 -(void)dealloc {

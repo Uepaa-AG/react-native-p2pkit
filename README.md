@@ -22,7 +22,7 @@ react-native link react-native-p2pkit
 5. Setup and link the p2pkit framework on your native environments:
   * <strong>iOS</strong>: Follow the [CocoaPods setup](http://p2pkit.io/developer/get-started/ios/#signup)
 > Currently the module is configured to use CocoaPods for fetching and linking the P2PKit.framework. If you are getting "header search paths" errors, make sure to compile the Pods project at least once so that the p2pkit headers will be exported to ./Pods/Headers/Public, the module is configured to search for them there. Note that Bitcode is not supported, you would need to disable Bitcode in your iOS project.
-  
+
   * <strong>Android</strong>: Follow the [setup here](http://p2pkit.io/developer/get-started/android/)
 > Don't forget to add the p2pkit maven repository to your app's gradle file (as mentioned in the link above)
 
@@ -30,63 +30,76 @@ react-native link react-native-p2pkit
 
 ## Example
 
-Here is an example that implements p2pkit functionality. Begin by calling <code>startP2PKit()</code>:
+Here is an example that implements p2pkit functionality:
 
 ```
 import p2pkit from 'react-native-p2pkit';
 
-var p2pkitCallback = {
+class MyComponent extends Component {
+  onException = (exceptionMessage) => {
+    console.log(exceptionMessage.message)
+  }
 
-    onException: function(exceptionMessage) {
-        console.log(exceptionMessage.message)
-    },
+  onEnabled = () => {
+    console.log('p2pkit is enabled')
+    p2pkit.enableProximityRanging()
+    p2pkit.startDiscovery('', p2pkit.HIGH_PERFORMANCE) //base64 encoded Data (bytes)
+  }
 
-    onEnabled: function() {
-        console.log('p2pkit is enabled')
-        p2pkit.enableProximityRanging()
-        p2pkit.startDiscovery('', p2pkit.HIGH_PERFORMANCE) //base64 encoded Data (bytes)
-    },
+  onDisabled = () => {
+    console.log('p2pkit is disabled')
+  }
 
-    onDisabled: function() {
-        console.log('p2pkit is disabled')
-    },
+  // Refer to platform specific API for error codes
+  onError = (errorObject) => {
+    console.log('p2pkit failed to enable on platform ' + errorObject.platform + ' with error code ' + errorObject.errorCode)
+  }
 
-    // Refer to platform specific API for error codes
-    onError: function(errorObject) {
-        console.log('p2pkit failed to enable on platform ' + errorObject.platform + ' with error code ' + errorObject.errorCode)
-    },
+  onDiscoveryStateChanged = (discoveryStateObject) => {
+    console.log('discovery state updated on platform ' + discoveryStateObject.platform + ' with error code ' + discoveryStateObject.state)
+  }
 
-    onDiscoveryStateChanged: function(discoveryStateObject) {
-        console.log('discovery state updated on platform ' + discoveryStateObject.platform + ' with error code ' + discoveryStateObject.state)
-    },
+  onPeerDiscovered = (peer) => {
+    console.log('peer discovered ' + peer.peerID)
+  }
 
-    onPeerDiscovered: function(peer) {
-        console.log('peer discovered ' + peer.peerID)
-    },
+  onPeerLost = (peer) => {
+    console.log('peer lost ' + peer.peerID)
+  }
 
-    onPeerLost: function(peer) {
-        console.log('peer lost ' + peer.peerID)
-    },
+  onPeerUpdatedDiscoveryInfo = (peer) => {
+    console.log('discovery info updated for peer ' + peer.peerID + ' info ' + peer.discoveryInfo)
+  }
 
-    onPeerUpdatedDiscoveryInfo: function(peer) {
-        console.log('discovery info updated for peer ' + peer.peerID + ' info ' + peer.discoveryInfo)
-    },
+  onProximityStrengthChanged = (peer) => {
+    console.log('proximity strength changed for peer ' + peer.peerID + ' proximity strength ' + peer.proximityStrength)
+  }
 
-    onProximityStrengthChanged: function(peer) {
-        console.log('proximity strength changed for peer ' + peer.peerID + ' proximity strength ' + peer.proximityStrength)
-    },
+  onGetMyPeerId = (reply) => {
+    console.log(reply.myPeerId)
+  }
 
-    onGetMyPeerId: function(reply) {
-        console.log(reply.myPeerId)
-    },
-    
-    onGetDiscoveryPowerMode: function(reply) {
-    	console.log(reply.discoveryPowerMode)
-    }
-}
+  onGetDiscoveryPowerMode = (reply) => {
+  console.log(reply.discoveryPowerMode)
+  }
 
-startP2PKit: function() {
-    p2pkit.enable('<YOUR APPLICATION KEY>', p2pkitCallback)
+  componentWillMount() {
+    p2pkit.addListener('onEnabled', this.onEnabled)
+    p2pkit.addListener('onPeerDiscovered', this.onPeerDiscovered)
+  }
+
+  componentWillUnmount() {
+    p2pkit.removeListener('onEnabled', this.onEnabled)
+    p2pkit.removeListener('onPeerDiscovered', this.onPeerDiscovered)
+  }
+
+  componentDidMount() {
+    p2pkit.enable('<YOUR APPLICATION KEY>')
+  }
+
+  render() {
+    // render code
+  }
 }
 ```
 

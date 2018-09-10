@@ -1,73 +1,62 @@
 /**
- * @providesModule P2PKit
- * @flow
- */
+* @providesModule P2PKit
+* @flow
+*/
 'use strict';
 
 import {
   NativeModules,
   NativeEventEmitter
- } from 'react-native';
+} from 'react-native';
 
 const { PPKReactBridge } = NativeModules;
 
 export default class P2PKit {
+  static LOW_POWER = 'LOW_POWER';
+  static HIGH_PERFORMANCE = 'HIGH_PERFORMANCE';
+  static p2pkitCallbackEmitter = new NativeEventEmitter(PPKReactBridge);
 
-	static LOW_POWER = 'LOW_POWER';
-	static HIGH_PERFORMANCE = 'HIGH_PERFORMANCE';
-	static p2pkitCallbackHandler_;
-	static p2pkitCallbackEmitter = new NativeEventEmitter(PPKReactBridge);
+  static addListener(name, callback) {
+    P2PKit.p2pkitCallbackEmitter.addListener(name, callback);
+  }
 
-	static subscription = P2PKit.p2pkitCallbackEmitter.addListener(
-		'callback',
-    	(nativeCallback) => {
-      		if(P2PKit.p2pkitCallbackHandler_[nativeCallback.methodName]) {
-        		P2PKit.p2pkitCallbackHandler_[nativeCallback.methodName](nativeCallback.parms);
-      		}
-    	}
-  	)
+  static removeListener(name, callback) {
+    P2PKit.p2pkitCallbackEmitter.removeListener(name, callback);
+  }
 
-  	static enable(appkey, p2pkitCallbackHandler){
+  static enable(appkey) {
+    PPKReactBridge.enable(appkey);
+  }
 
-		if(!p2pkitCallbackHandler){
-        throw 'You must enable p2pkit with appropriate callbacks';
-    }
+  static disable() {
+    PPKReactBridge.disable();
+  }
 
-    P2PKit.p2pkitCallbackHandler_ = p2pkitCallbackHandler;
+  static getMyPeerId(myPeerId) {
+    PPKReactBridge.getMyPeerId();
+  }
 
-    	PPKReactBridge.enable(appkey);
-    }
+  static startDiscovery(discoveryInfo, discoveryPowerMode) {
+    PPKReactBridge.startDiscovery(discoveryInfo, discoveryPowerMode);
+  }
 
-	static disable(){
-      	PPKReactBridge.disable();
-    }
+  static stopDiscovery() {
+    PPKReactBridge.stopDiscovery();
+  }
 
-	static getMyPeerId(myPeerId){
-      	PPKReactBridge.getMyPeerId();
-    }
+  static enableProximityRanging() {
+    PPKReactBridge.enableProximityRanging();
+  }
 
-	static startDiscovery(discoveryInfo, discoveryPowerMode){
-      	PPKReactBridge.startDiscovery(discoveryInfo, discoveryPowerMode);
-    }
+  static pushNewDiscoveryInfo(discoveryInfo) {
+    PPKReactBridge.pushNewDiscoveryInfo(discoveryInfo);
+  }
 
-	static stopDiscovery(){
-      	PPKReactBridge.stopDiscovery();
-    }
+  static getDiscoveryPowerMode() {
+    PPKReactBridge.getDiscoveryPowerMode();
+  }
 
-	static enableProximityRanging(){
-      	PPKReactBridge.enableProximityRanging();
-    }
-
-	static pushNewDiscoveryInfo(discoveryInfo){
-      	PPKReactBridge.pushNewDiscoveryInfo(discoveryInfo);
-    }
-    
-	static getDiscoveryPowerMode() {
-      	PPKReactBridge.getDiscoveryPowerMode();
-	}
-    
-	static setDiscoveryPowerMode(discoveryPowerMode) {
-      	PPKReactBridge.setDiscoveryPowerMode(discoveryPowerMode);
-	}
-
-};
+  static setDiscoveryPowerMode(discoveryPowerMode) {
+    PPKReactBridge.setDiscoveryPowerMode(discoveryPowerMode);
+  }
+}
