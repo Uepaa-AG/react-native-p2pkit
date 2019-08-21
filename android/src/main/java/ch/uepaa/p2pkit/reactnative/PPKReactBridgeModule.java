@@ -52,6 +52,7 @@ public class PPKReactBridgeModule extends ReactContextBaseJavaModule implements 
         }
     }
 
+    @ReactMethod
     private void getMyPeerId() {
 
         if (!P2PKit.isEnabled()) {
